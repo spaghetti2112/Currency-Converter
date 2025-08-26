@@ -32,23 +32,15 @@ function toggleTheme() {
 /* ===========================
    RATES + UI helpers
    =========================== */
-function fillDatalist(id, codes) {
-  const el = $(id);
-  el.innerHTML = "";
-  for (const c of codes) {
-    el.insertAdjacentHTML("beforeend", `<option value="${c}"></option>`);
-  }
-}
-
-function fillSelect(id, codes) {
-  const el = $(id);
-  el.innerHTML = "";
-  for (const c of codes) {
-    el.insertAdjacentHTML("beforeend", `<option value="${c}">${c}</option>`);
-  }
-}
-
-async function fetchRates() {
+function fillDatalist(id, codes) {␊
+  const el = $(id);␊
+  el.innerHTML = "";␊
+  for (const c of codes) {␊
+    el.insertAdjacentHTML("beforeend", `<option value="${c}"></option>`);␊
+  }␊
+}␊
+␊
+async function fetchRates() {␊
   $("#attrib").textContent = "Fetching rates…";
   try {
     const res = await fetch("/api/rates");
@@ -60,14 +52,11 @@ async function fetchRates() {
     const codes = Object.keys(RATES).sort();
     fillDatalist("#fromCodes", codes);
     fillDatalist("#toCodes", codes);
-    fillSelect("#fromSelect", codes);
-    fillSelect("#toSelect", codes);
+   
 
     // keep existing selections if they remain valid; otherwise pick defaults
     const fromEl = $("#from");
     const toEl = $("#to");
-    const fromSel = $("#fromSelect");
-    const toSel = $("#toSelect");
     const curFrom = normalizeCode(fromEl.value);
     const curTo = normalizeCode(toEl.value);
 
@@ -78,8 +67,7 @@ async function fetchRates() {
       toEl.value = RATES["EUR"] ? "EUR" : (codes[1] || codes[0]);
     }
 
-    fromSel.value = fromEl.value;
-    toSel.value = toEl.value;
+    
     $("#attrib").textContent = ATTRIB + (data.live ? "" : " (fallback rates in use)");
   } catch (e) {
     $("#attrib").textContent = "Failed to fetch rates.";
@@ -129,51 +117,34 @@ async function convert() {
   $("#last").textContent = `Converted using current rates.`;
 }
 
-function swap() {
-  const fromEl = $("#from");
-  const toEl = $("#to");
-  const fromSel = $("#fromSelect");
-  const toSel = $("#toSelect");
-  const t = fromEl.value;
-  fromEl.value = toEl.value;
-  toEl.value = t;
-  fromSel.value = fromEl.value;
-  toSel.value = toEl.value;
+function swap() {␊
+  const fromEl = $("#from");␊
+  const toEl = $("#to");␊
+  const t = fromEl.value;␊
+  fromEl.value = toEl.value;␊
+  toEl.value = t;␊
+}␊
 }
 
 /* ===========================
    Boot
    =========================== */
-window.addEventListener("DOMContentLoaded", () => {
-  initTheme();              // apply saved or system theme immediately
-  fetchRates();             // fetch rates and fill datalists
-  $("#themeToggle").addEventListener("click", toggleTheme);
-  $("#convert").addEventListener("click", convert);
-  $("#swap").addEventListener("click", swap);
-  $("#refresh").addEventListener("click", fetchRates);
-
-  $("#fromSelect").addEventListener("change", () => {
-    $("#from").value = $("#fromSelect").value;
-  });
-  $("#toSelect").addEventListener("change", () => {
-    $("#to").value = $("#toSelect").value;
-  });
-  $("#from").addEventListener("input", () => {
-    const code = normalizeCode($("#from").value);
-    if (RATES[code]) $("#fromSelect").value = code;
-  });
-  $("#to").addEventListener("input", () => {
-    const code = normalizeCode($("#to").value);
-    if (RATES[code]) $("#toSelect").value = code;
-  });
-
-  // Enter key submits
-  ["#from", "#to", "#amount"].forEach(sel => {
-    $(sel).addEventListener("keydown", (e) => {
-      if (e.key === "Enter") convert();
+window.addEventListener("DOMContentLoaded", () => {␊
+  initTheme();              // apply saved or system theme immediately␊
+  fetchRates();             // fetch rates and fill datalists␊
+  $("#themeToggle").addEventListener("click", toggleTheme);␊
+  $("#convert").addEventListener("click", convert);␊
+  $("#swap").addEventListener("click", swap);␊
+  $("#refresh").addEventListener("click", fetchRates);␊
+␊
+  // Enter key submits␊
+  ["#from", "#to", "#amount"].forEach(sel => {␊
+    $(sel).addEventListener("keydown", (e) => {␊
+      if (e.key === "Enter") convert();␊
     });
   });
 });
+
 
 
 
