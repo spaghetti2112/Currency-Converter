@@ -43,15 +43,17 @@
     </header>
 
     <section class="grid">
-      <div class="field">
+ <div class="field">
         <label for="from">From</label>
         <input id="from" list="fromCodes" placeholder="e.g., USD" spellcheck="false" />
+        <select id="fromSelect"></select>
         <datalist id="fromCodes"></datalist>
       </div>
 
       <div class="field">
         <label for="to">To</label>
         <input id="to" list="toCodes" placeholder="e.g., EUR" spellcheck="false" />
+        <select id="toSelect"></select>
         <datalist id="toCodes"></datalist>
       </div>
 
@@ -78,4 +80,5 @@
   <script src="/static/app.js"></script>
 </body>
 </html>
+
 
