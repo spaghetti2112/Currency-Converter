@@ -73,8 +73,9 @@ body {
   font-size: 0.95rem;
 }
 
+input, select, button { font: inherit; }
 
-input[type="text"], input[list], select {
+input[type="text"], input[list] {
   width: 100%;
   padding: 12px 14px;
   border-radius: 10px;
@@ -85,11 +86,10 @@ input[type="text"], input[list], select {
   transition: border .15s ease, box-shadow .15s ease, background .2s ease;
 }
 :root[data-theme="light"] input[type="text"],
-:root[data-theme="light"] input[list],
-
+:root[data-theme="light"] input[list] {
   background: #ffffff;
 }
-input[type="text"]:focus, input[list]:focus, select:focus {
+input[type="text"]:focus, input[list]:focus {
   border-color: var(--ring);
   box-shadow: 0 0 0 3px rgba(59,130,246,.25);
   background: var(--hover);
@@ -136,6 +136,3 @@ input[type="text"]:focus, input[list]:focus, select:focus {
   border-top: 1px solid var(--border);
   padding-top: 12px;
 }
-
-
-
