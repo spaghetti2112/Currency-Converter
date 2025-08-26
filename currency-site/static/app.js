@@ -40,6 +40,14 @@ function fillDatalist(id, codes) {
   }
 }
 
+function fillSelect(id, codes) {
+  const el = $(id);
+  el.innerHTML = "";
+  for (const c of codes) {
+    el.insertAdjacentHTML("beforeend", `<option value="${c}">${c}</option>`);
+  }
+}
+
 async function fetchRates() {
   $("#attrib").textContent = "Fetching rates…";
   try {
@@ -52,10 +60,14 @@ async function fetchRates() {
     const codes = Object.keys(RATES).sort();
     fillDatalist("#fromCodes", codes);
     fillDatalist("#toCodes", codes);
+    fillSelect("#fromSelect", codes);
+    fillSelect("#toSelect", codes);
 
     // keep existing selections if they remain valid; otherwise pick defaults
     const fromEl = $("#from");
     const toEl = $("#to");
+    const fromSel = $("#fromSelect");
+    const toSel = $("#toSelect");
     const curFrom = normalizeCode(fromEl.value);
     const curTo = normalizeCode(toEl.value);
 
@@ -65,6 +77,9 @@ async function fetchRates() {
     if (!RATES[curTo]) {
       toEl.value = RATES["EUR"] ? "EUR" : (codes[1] || codes[0]);
     }
+
+    fromSel.value = fromEl.value;
+    toSel.value = toEl.value;
     $("#attrib").textContent = ATTRIB + (data.live ? "" : " (fallback rates in use)");
   } catch (e) {
     $("#attrib").textContent = "Failed to fetch rates.";
@@ -117,9 +132,13 @@ async function convert() {
 function swap() {
   const fromEl = $("#from");
   const toEl = $("#to");
+  const fromSel = $("#fromSelect");
+  const toSel = $("#toSelect");
   const t = fromEl.value;
   fromEl.value = toEl.value;
   toEl.value = t;
+  fromSel.value = fromEl.value;
+  toSel.value = toEl.value;
 }
 
 /* ===========================
@@ -133,6 +152,21 @@ window.addEventListener("DOMContentLoaded", () => {
   $("#swap").addEventListener("click", swap);
   $("#refresh").addEventListener("click", fetchRates);
 
+  $("#fromSelect").addEventListener("change", () => {
+    $("#from").value = $("#fromSelect").value;
+  });
+  $("#toSelect").addEventListener("change", () => {
+    $("#to").value = $("#toSelect").value;
+  });
+  $("#from").addEventListener("input", () => {
+    const code = normalizeCode($("#from").value);
+    if (RATES[code]) $("#fromSelect").value = code;
+  });
+  $("#to").addEventListener("input", () => {
+    const code = normalizeCode($("#to").value);
+    if (RATES[code]) $("#toSelect").value = code;
+  });
+
   // Enter key submits
   ["#from", "#to", "#amount"].forEach(sel => {
     $(sel).addEventListener("keydown", (e) => {
@@ -140,6 +174,7 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
 
 
 
