@@ -53,10 +53,18 @@ async function fetchRates() {
     fillDatalist("#fromCodes", codes);
     fillDatalist("#toCodes", codes);
 
-    // sensible defaults (user can still type anything)
-    $("#from").value = RATES["USD"] ? "USD" : codes[0];
-    $("#to").value   = RATES["EUR"] ? "EUR" : (codes[1] || codes[0]);
+    // keep existing selections if they remain valid; otherwise pick defaults
+    const fromEl = $("#from");
+    const toEl = $("#to");
+    const curFrom = normalizeCode(fromEl.value);
+    const curTo = normalizeCode(toEl.value);
 
+    if (!RATES[curFrom]) {
+      fromEl.value = RATES["USD"] ? "USD" : codes[0];
+    }
+    if (!RATES[curTo]) {
+      toEl.value = RATES["EUR"] ? "EUR" : (codes[1] || codes[0]);
+    }
     $("#attrib").textContent = ATTRIB + (data.live ? "" : " (fallback rates in use)");
   } catch (e) {
     $("#attrib").textContent = "Failed to fetch rates.";
@@ -132,5 +140,6 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
 
 
