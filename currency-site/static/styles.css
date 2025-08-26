@@ -73,9 +73,7 @@ body {
   font-size: 0.95rem;
 }
 
-.field select {
-  margin-top: 6px;
-}
+
 input[type="text"], input[list], select {
   width: 100%;
   padding: 12px 14px;
@@ -88,7 +86,7 @@ input[type="text"], input[list], select {
 }
 :root[data-theme="light"] input[type="text"],
 :root[data-theme="light"] input[list],
-:root[data-theme="light"] select {
+
   background: #ffffff;
 }
 input[type="text"]:focus, input[list]:focus, select:focus {
@@ -138,5 +136,6 @@ input[type="text"]:focus, input[list]:focus, select:focus {
   border-top: 1px solid var(--border);
   padding-top: 12px;
 }
+
 
 
