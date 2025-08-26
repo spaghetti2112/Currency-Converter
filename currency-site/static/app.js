@@ -32,15 +32,15 @@ function toggleTheme() {
 /* ===========================
    RATES + UI helpers
    =========================== */
-function fillDatalist(id, codes) {␊
-  const el = $(id);␊
-  el.innerHTML = "";␊
-  for (const c of codes) {␊
-    el.insertAdjacentHTML("beforeend", `<option value="${c}"></option>`);␊
-  }␊
-}␊
-␊
-async function fetchRates() {␊
+function fillDatalist(id, codes) {
+  const el = $(id);
+  el.innerHTML = "";
+  for (const c of codes) {
+    el.insertAdjacentHTML("beforeend", `<option value="${c}"></option>`);
+  }
+}
+
+async function fetchRates() {
   $("#attrib").textContent = "Fetching rates…";
   try {
     const res = await fetch("/api/rates");
@@ -49,10 +49,9 @@ async function fetchRates() {␊
     ATTRIB = data.attribution || "";
     BASE = data.base || "USD";
 
-    const codes = Object.keys(RATES).sort();
+     const codes = Object.keys(RATES).sort();
     fillDatalist("#fromCodes", codes);
     fillDatalist("#toCodes", codes);
-   
 
     // keep existing selections if they remain valid; otherwise pick defaults
     const fromEl = $("#from");
@@ -67,7 +66,8 @@ async function fetchRates() {␊
       toEl.value = RATES["EUR"] ? "EUR" : (codes[1] || codes[0]);
     }
 
-    
+
+
     $("#attrib").textContent = ATTRIB + (data.live ? "" : " (fallback rates in use)");
   } catch (e) {
     $("#attrib").textContent = "Failed to fetch rates.";
@@ -117,35 +117,29 @@ async function convert() {
   $("#last").textContent = `Converted using current rates.`;
 }
 
-function swap() {␊
-  const fromEl = $("#from");␊
-  const toEl = $("#to");␊
-  const t = fromEl.value;␊
-  fromEl.value = toEl.value;␊
-  toEl.value = t;␊
-}␊
+function swap() {
+  const fromEl = $("#from");
+  const toEl = $("#to");
+  const t = fromEl.value;
+  fromEl.value = toEl.value;
+  toEl.value = t;
 }
 
 /* ===========================
    Boot
    =========================== */
-window.addEventListener("DOMContentLoaded", () => {␊
-  initTheme();              // apply saved or system theme immediately␊
-  fetchRates();             // fetch rates and fill datalists␊
-  $("#themeToggle").addEventListener("click", toggleTheme);␊
-  $("#convert").addEventListener("click", convert);␊
-  $("#swap").addEventListener("click", swap);␊
-  $("#refresh").addEventListener("click", fetchRates);␊
-␊
-  // Enter key submits␊
-  ["#from", "#to", "#amount"].forEach(sel => {␊
-    $(sel).addEventListener("keydown", (e) => {␊
-      if (e.key === "Enter") convert();␊
+window.addEventListener("DOMContentLoaded", () => {
+  initTheme();              // apply saved or system theme immediately
+  fetchRates();             // fetch rates and fill datalists
+  $("#themeToggle").addEventListener("click", toggleTheme);
+  $("#convert").addEventListener("click", convert);
+  $("#swap").addEventListener("click", swap);
+  $("#refresh").addEventListener("click", fetchRates);
+
+  // Enter key submits
+  ["#from", "#to", "#amount"].forEach(sel => {
+    $(sel).addEventListener("keydown", (e) => {
+      if (e.key === "Enter") convert();
     });
   });
 });
-
-
-
-
-
