@@ -1,138 +1,206 @@
 /* Dark theme (default) */
-:root {
-  --bg: #0b0e12;
-  --panel: #141922;
-  --text: #e9eef6;
-  --muted: #9aa7b3;
-  --primary: #4ea1ff;
-  --primary-contrast: #0b0e12;
-  --border: #243042;
-  --hover: #1a2130;
-  --ring: #3b82f6;
-  --danger: #ff6b6b;
+:root{
+  --bg:#0b0e12; --panel:#0f1420; --panel-2:#0d1220; --text:#e9eef6; --muted:#9aa7b3;
+  --border:rgba(255,255,255,0.12); --ring:#38bdf8; --accent:#22d3ee; --accent-2:#a78bfa;
+}
+:root[data-theme="light"]{
+  --bg:#f6f8fb; --panel:#fff; --panel-2:#f9fbff; --text:#0b1220; --muted:#475569;
+  --border:rgba(15,18,32,0.12); --ring:#0ea5e9; --accent:#0891b2; --accent-2:#7c3aed;
 }
 
-/* Light theme overrides */
-:root[data-theme="light"] {
-  --bg: #f6f8fb;
-  --panel: #ffffff;
-  --text: #0b1220;
-  --muted: #445065;
-  --primary: #2563eb;
-  --primary-contrast: #ffffff;
-  --border: #e6ebf2;
-  --hover: #f0f4fb;
-  --ring: #3b82f6;
+/* Base & container */
+html,body{height:100%}
+body{
+  margin:0;
+  background:
+    radial-gradient(1200px 800px at -10% -10%, rgba(34,211,238,0.10), transparent 45%),
+    radial-gradient(900px 700px at 110% 10%, rgba(167,139,250,0.12), transparent 40%),
+    var(--bg);
+  color:var(--text);
+  font:16px/1.55 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Noto Sans,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Apple Color Emoji","Segoe UI Emoji";
+}
+.container{
+  max-width:960px; margin:40px auto; padding:24px;
+  border:1px solid var(--border); border-radius:18px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)), var(--panel);
+  box-shadow:0 30px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.03);
+}
+.header{display:grid; grid-template-columns:1fr auto; gap:12px; align-items:end}
+.header h1{margin:0; font-weight:800; font-size:clamp(24px,4vw,36px)}
+.muted{color:var(--muted)}
+
+/* Grid (fix amount drift) */
+.grid{display:grid; grid-template-columns:1fr; gap:16px}
+@media (min-width:720px){ .grid{ grid-template-columns:repeat(3, minmax(0,1fr)) } }
+
+/* Fields & inputs */
+.field{ position:relative; min-width:0 }
+.field label{ display:block; font-size:13px; color:var(--muted); margin-bottom:8px }
+input,select,button{ font:inherit }
+input[type="text"], select{
+  width:100%; box-sizing:border-box;
+  padding:12px 14px;
+  border-radius:12px; border:1px solid var(--border);
+  background:linear-gradient(180deg, var(--panel-2), var(--panel));
+  color:var(--text); outline:none;
+  transition:box-shadow .18s ease, border-color .18s ease, transform .05s ease;
+}
+input.with-flag{ padding-right:2.4em } /* reserve space for flag */
+input[type="text"]:focus, select:focus{ border-color:var(--ring); box-shadow:0 0 0 4px color-mix(in oklab, var(--ring) 28%, transparent) }
+input[type="text"]:active{ transform:translateY(1px) }
+
+/* Buttons */
+.actions{ display:flex; gap:12px; margin-top:12px; flex-wrap:wrap }
+.btn{
+  padding:10px 14px; border-radius:12px;
+  background:linear-gradient(180deg, var(--panel-2), var(--panel));
+  border:1px solid var(--border); color:var(--text);
+  cursor:pointer; transition:transform .08s ease, filter .2s ease, box-shadow .2s ease;
+}
+.btn:hover{ filter:brightness(1.05) }
+.btn:active{ transform:translateY(1px) }
+.btn.small{ padding:8px 10px; font-size:13px }
+.btn.primary{
+  background:linear-gradient(180deg,
+    color-mix(in oklab, var(--ring) 22%, var(--panel-2)),
+    color-mix(in oklab, var(--ring) 10%, var(--panel)));
+  border-color:color-mix(in oklab, var(--ring) 45%, var(--border));
+  box-shadow:0 10px 24px rgba(56,189,248,0.18);
 }
 
-* { box-sizing: border-box; }
-html, body { height: 100%; }
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
-}
+/* Output */
+.output{ margin-top:12px }
+.result{ font-size:clamp(18px,2.6vw,24px); font-weight:700 }
+.result.pop{ animation:pop .35s cubic-bezier(.2,.8,.2,1) }
+@keyframes pop{ 0%{transform:scale(.98);opacity:.6}60%{transform:scale(1.03);opacity:1}100%{transform:scale(1)} }
 
-.container {
-  max-width: 920px;
-  margin: 40px auto;
-  padding: 24px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0,0,0,.35);
-}
+/* Footer */
+.footer{ margin-top:28px; text-align:center }
+.footer-rule{ height:1px; border:0; background:var(--border); margin:26px 0 12px }
+footer .copyright{ font-size:12px; color:var(--muted); opacity:.85 }
 
-.header {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 10px;
-  align-items: center;
-}
-.header h1 {
-  margin: 0 0 6px 0;
-  letter-spacing: .2px;
-  font-weight: 700;
-}
-.header-actions { display: flex; gap: 8px; }
-.muted { color: var(--muted); }
-.btn.small { padding: 6px 10px; font-size: .92rem; }
-
-.grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  margin-top: 18px;
-}
-
-.field label {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--muted);
-  font-size: 0.95rem;
-}
-
-input, select, button { font: inherit; }
-
-input[type="text"], input[list] {
+/* Combobox overlay + flags INSIDE input */
+/* --- Combobox container & input --- */
+.combo { position: relative; }  /* anchor for the inside flag & dropdown */
+.combo-input {
   width: 100%;
   padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: #0f1420;
-  color: var(--text);
+  padding-right: 2.4em;          /* reserve space for the flag INSIDE */
+  border-radius: 12px;
+  border: 1px solid var(--border, rgba(255,255,255,0.12));
+  background: linear-gradient(180deg, var(--panel-2, #0d1220), var(--panel, #0f1420));
+  color: var(--text, #e9eef6);
   outline: none;
-  transition: border .15s ease, box-shadow .15s ease, background .2s ease;
+  box-sizing: border-box;
+  transition: box-shadow .18s ease, border-color .18s ease;
 }
-:root[data-theme="light"] input[type="text"],
-:root[data-theme="light"] input[list] {
-  background: #ffffff;
-}
-input[type="text"]:focus, input[list]:focus {
-  border-color: var(--ring);
-  box-shadow: 0 0 0 3px rgba(59,130,246,.25);
-  background: var(--hover);
+.combo-input:focus {
+  border-color: var(--ring, #38bdf8);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--ring, #38bdf8) 28%, transparent);
 }
 
-.actions {
-  margin-top: 14px;
+/* --- Flag INSIDE the input on the right --- */
+.sel-flag {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  opacity: .95;
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* --- Dropdown list --- */
+.combo-list {
+  position: absolute;
+  left: 0; right: 0;
+  top: calc(100% + 6px);
+  max-height: 280px;
+  overflow: auto;
+  display: none;                 /* toggled to block by JS */
+  z-index: 2000;
+  background: linear-gradient(180deg, var(--panel-2, #0d1220), var(--panel, #0f1420));
+  color: var(--text, #e9eef6);
+  border: 1px solid var(--border, rgba(255,255,255,0.12));
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 18px 38px rgba(0,0,0,.35);
+  backdrop-filter: saturate(120%) blur(6px);
+  -webkit-backdrop-filter: saturate(120%) blur(6px);
+}
+.combo-list.open { display: block; }  /* simple visibility toggle */
+
+/* --- Dropdown item --- */
+.combo-item {
   display: flex;
+  align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
-}
-
-.btn {
-  padding: 10px 14px;
+  padding: 10px;
   border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--hover);
-  color: var(--text);
   cursor: pointer;
-  transition: transform .06s ease, background .15s ease, border-color .15s ease;
+  transition: background .12s ease;
 }
-.btn:hover { background: #212a3a; }
-:root[data-theme="light"] .btn:hover { background: #eef3fb; }
-.btn:active { transform: translateY(1px); }
-
-.btn.primary {
-  background: var(--primary);
-  border-color: transparent;
-  color: var(--primary-contrast);
+.combo-item:hover,
+.combo-item[aria-selected="true"] {
+  background: color-mix(in oklab, var(--ring, #38bdf8) 14%, transparent);
 }
-.btn.primary:hover { filter: brightness(1.05); }
-
-.output {
-  margin-top: 18px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--border);
+/* Inside-input "show all" button (▾) */
+.combo-toggle{
+  position:absolute;
+  left:10px;
+  top:50%;
+  transform:translateY(-50%);
+  width:20px; height:20px;
+  padding:0; margin:0;
+  border:0; background:transparent;
+  color: var(--muted, #94a3b8);
+  cursor:pointer;
+  line-height:1;
 }
-#result { margin: 10px 0 4px 0; }
+.combo-toggle:hover{ color: var(--text, #e9eef6); }
 
-.footer {
-  margin-top: 14px;
-  color: var(--muted);
-  font-size: .95rem;
-  border-top: 1px solid var(--border);
-  padding-top: 12px;
+/* Reserve a bit of left space for the button */
+.combo-input.with-toggle{ padding-left: 2.2em; }
+/* Flag icon in list */
+.combo-item .flag {
+  width: 1.2em;
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Ensure 3-column grid doesn’t push Amount weirdly on wide screens */
+@media (min-width: 720px){
+  .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+/* Placeholder style for inputs */
+::placeholder { color: var(--muted, #9aa7b3); opacity: .9; }
+
+/* Spinner on the Refresh button */
+.btn.loading {
+  pointer-events: none;
+  opacity: 0.9;
+  position: relative;
+}
+.btn.loading::after {
+  content: "";
+  display: inline-block;
+  width: 14px; height: 14px;
+  margin-left: 8px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: -2px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Subtle pulse on the source/attrib line after refresh */
+.pulse {
+  animation: pulse 0.9s ease;
+}
+@keyframes pulse {
+  0%   { text-shadow: 0 0 0 currentColor; }
+  40%  { text-shadow: 0 0 12px color-mix(in oklab, var(--ring, #38bdf8) 60%, transparent); }
+  100% { text-shadow: 0 0 0 currentColor; }
 }
