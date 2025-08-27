@@ -1,4 +1,5 @@
-from flask import Flask, render_template,send_from_directory, request, jsonify
+from flask import Flask, render_template, request, jsonify
+from flask import send_from_directory 
 import requests
 
 app = Flask(
@@ -7,6 +8,7 @@ app = Flask(
     static_url_path="/static",
     template_folder="templates",
 )
+app.config['USE_X_SENDFILE'] = False
 
 ATTRIB_TEXT = "Exchange rates provided by ExchangeRate-API (https://www.exchangerate-api.com)"
 FALLBACK_RATES = {
@@ -95,7 +97,13 @@ def debug_static():
             out.append(f"{path}: MISSING\n")
     return "<pre>" + textwrap.dedent("\n".join(out)) + "</pre>"
 
+@app.route('/static/<path:filename>')
+def static_files(filename):
+    # conditional=True adds ETag/If-None-Match support, proper Content-Length
+    return send_from_directory(app.static_folder, filename, conditional=True)
+
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
