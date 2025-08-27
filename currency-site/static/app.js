@@ -81,6 +81,38 @@ function closeAllLists(){
   document.getElementById('toList')?.classList.remove('open');
 }
 
+// --- iOS detection + list positioning (so dropdown sits above the keyboard)
+const isIOS = (() => {
+  const ua = navigator.userAgent || '';
+  return /iPad|iPhone|iPod/.test(ua) || (ua.includes('Mac') && 'ontouchend' in document);
+})();
+
+function positionListForViewport(input, list) {
+  const rect = input.getBoundingClientRect();
+  const vv = window.visualViewport;
+  if (isIOS && vv) {
+    const left = Math.round(rect.left);
+    const top  = Math.round(rect.bottom + 6);
+    list.style.position = 'fixed';
+    list.style.left = left + 'px';
+    list.style.top  = top  + 'px';
+    list.style.minWidth = rect.width + 'px';
+    // keep the dropdown fully visible above the keyboard
+    const available = Math.max(160, Math.round(vv.height - top - 8));
+    list.style.maxHeight = available + 'px';
+    list.classList.add('ios-fixed');
+  } else {
+    // revert to normal (CSS handles absolute positioning)
+    list.style.position = '';
+    list.style.left = '';
+    list.style.top = '';
+    list.style.minWidth = '';
+    list.style.maxHeight = '';
+    list.classList.remove('ios-fixed');
+  }
+}
+
+
 
 /* ---------------------------
    Build full code list (ALL)
@@ -149,8 +181,12 @@ function wireCombo({ input, list, flag }) {
     flag.textContent = curToFlag(code);
   }
 
-  function open()  { list.classList.add('open'); }
-  function close() { list.classList.remove('open'); active = -1; }
+  function open()  { 
+  positionListForViewport(input, list); // <-- add this
+  list.classList.add('open'); 
+}
+function close(){ list.classList.remove('open'); active = -1; }
+
 
   function highlight(index) {
     const options = [...list.querySelectorAll('.combo-item')];
@@ -217,6 +253,17 @@ function wireCombo({ input, list, flag }) {
     if (e.target !== input && e.target !== toggleBtn && !list.contains(e.target)) close();
   });
 }
+
+// Keep the list aligned when the visual viewport changes (iOS keyboard)
+const vv = window.visualViewport;
+const realign = () => { if (list.classList.contains('open')) positionListForViewport(input, list); };
+if (vv) {
+  vv.addEventListener('resize', realign);
+  vv.addEventListener('scroll', realign);
+}
+window.addEventListener('scroll', realign, { passive: true });
+window.addEventListener('resize', realign);
+
 
 /* ---------------------------
    Convert / Swap / Refresh
@@ -334,3 +381,4 @@ window.addEventListener('scroll', closeAllLists, { passive: true });
     $(sel)?.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') doConvert(); });
   });
 });
+
