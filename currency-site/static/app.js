@@ -76,6 +76,12 @@ function pulse(el){
   el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
 }
 
+function closeAllLists(){
+  document.getElementById('fromList')?.classList.remove('open');
+  document.getElementById('toList')?.classList.remove('open');
+}
+
+
 /* ---------------------------
    Build full code list (ALL)
 --------------------------- */
@@ -308,6 +314,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   if ($('#fromInput')) $('#fromInput').value = '';
   if ($('#toInput'))   $('#toInput').value   = '';
   if ($('#amount'))    $('#amount').value    = '';
+// Close dropdowns on page scroll (mobile-friendly)
+window.addEventListener('scroll', closeAllLists, { passive: true });
 
   const amountEl = $('#amount');
   if (amountEl) amountEl.placeholder = 'Amount (e.g. 1234)';
@@ -326,4 +334,3 @@ window.addEventListener('DOMContentLoaded', async () => {
     $(sel)?.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') doConvert(); });
   });
 });
-
