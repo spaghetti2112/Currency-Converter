@@ -1,80 +1,78 @@
 <!doctype html>
-<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Currency Converter</title>
-
-  <!-- Let browsers know we support both color schemes -->
-  <meta name="color-scheme" content="dark light">
-
-  <!-- PRE-CSS THEME SNAP: set data-theme ASAP to avoid flash -->
-  <script>
-    (function () {
-      try {
-        var saved = localStorage.getItem('theme');
-        var theme =
-          (saved === 'dark' || saved === 'light')
-            ? saved
-            : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        document.documentElement.setAttribute('data-theme', theme);
-      } catch (e) { /* ignore */ }
-    })();
-  </script>
-
-  <!-- Minimal critical colors so background is correct before CSS arrives -->
-  <style>
-    html,body { height:100%; margin:0; }
-    body { background:#0b0e12; color:#e9eef6; }
-    :root[data-theme="light"] body { background:#f6f8fb; color:#0b1220; }
-  </style>
-
-  <!-- Main stylesheet (loads after theme is set, so no flash) -->
-  <link rel="stylesheet" href="/static/styles.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Currency Converter</title>
+<meta name="color-scheme" content="dark light">
+<script>
+(function () {
+try {
+const saved = localStorage.getItem('theme');
+const theme = (saved === 'dark' || saved === 'light') ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+document.documentElement.setAttribute('data-theme', theme);
+} catch (e) {}
+})();
+</script>
+<link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <main class="container">
-    <header class="header">
-      <h1>Currency Converter</h1>
-      <div class="header-actions">
-        <button id="themeToggle" class="btn small" aria-label="Toggle theme">🌙 Dark</button>
-      </div>
-      <p class="muted">Live rates with offline fallback. Swap, refresh, and convert instantly.</p>
-    </header>
+<main class="container">
+<header class="header">
+<h1>Currency Converter</h1>
+<div class="header-actions">
+<button id="themeToggle" class="btn small" aria-label="Toggle theme">🌙 Dark</button>
+</div>
+<p class="muted">Live rates with offline fallback. Swap, refresh, and convert instantly.</p>
+</header>
 
-    <section class="grid">
-      <div class="field">
-        <label for="from">From</label>
-        <input id="from" list="fromCodes" placeholder="e.g., USD" spellcheck="false" />
-        <datalist id="fromCodes"></datalist>
-      </div>
 
-      <div class="field">
-        <label for="to">To</label>
-        <input id="to" list="toCodes" placeholder="e.g., EUR" spellcheck="false" />
-        <datalist id="toCodes"></datalist>
-      </div>
+<section class="grid">
+<div class="field">
+<label for="fromInput">From</label>
+<div class="combo" data-name="from">
+<input id="fromInput" class="combo-input" autocomplete="off" placeholder="Type currency code (e.g., USD)" />
+<span class="sel-flag" id="fromFlag" aria-hidden="true"></span>
+<div class="combo-list" id="fromList" role="listbox" aria-label="From currencies"></div>
+</div>
+</div>
+<div class="field">
+<label for="toInput">To</label>
+<div class="combo" data-name="to">
+<input id="toInput" class="combo-input" autocomplete="off" placeholder="Type currency code (e.g., EUR)" />
+<span class="sel-flag" id="toFlag" aria-hidden="true"></span>
+<div class="combo-list" id="toList" role="listbox" aria-label="To currencies"></div>
+</div>
+</div>
+<div class="field">
+<label for="amount">Amount</label>
+<input id="amount" type="text" placeholder="" inputmode="decimal" />
+</div>
+</section>
 
-      <div class="field">
-        <label for="amount">Amount</label>
-        <input id="amount" type="text" placeholder="1,234.56" inputmode="decimal" />
-      </div>
-    </section>
 
-    <section class="actions">
-      <button id="convert" class="btn primary">Convert</button>
-      <button id="swap" class="btn">Swap</button>
-      <button id="refresh" class="btn">Refresh rates</button>
-    </section>
+<section class="actions">
+<button id="convert" class="btn primary">Convert</button>
+<button id="swap" class="btn">Swap</button>
+<button id="refresh" class="btn">Refresh rates</button>
+</section>
 
-    <section class="output">
-      <h2 id="result"></h2>
-      <p id="last" class="muted"></p>
-    </section>
 
-    <footer id="attrib" class="footer"></footer>
-  </main>
+<section class="output">
+<h2 id="result" class="result"></h2>
+<p id="last" class="muted"></p>
+<div id="chosen" class="chip" style="display:none;"></div>
+</section>
 
-  <script src="/static/app.js"></script>
+
+<footer class="footer">
+<hr class="footer-rule" />
+<div id="source" class="muted">Loading rate source…</div>
+<div id="credit" class="copyright">© Ziyad — All rights reserved</div>
+</footer>
+</main>
+
+
+<script src="/static/app.js" defer></script>
 </body>
 </html>
+
