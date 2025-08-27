@@ -222,5 +222,23 @@ html, body {
 @media (hover: none) and (pointer: coarse) {
   .combo-list { max-height: 50vh; } /* half-screen tall, scrollable */
 }
+/* iOS-friendly scrolling & fixed-mode dropdown */
+.combo-list {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y; /* allow vertical swipes */
+}
+.combo-list.ios-fixed { position: fixed; } /* toggled by JS on iOS */
 
+/* Ensure the page itself can still scroll on mobile */
+html, body {
+  height: auto;
+  min-height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
 
+/* Cap dropdown height on touch devices so it never covers the whole screen */
+@media (hover: none) and (pointer: coarse) {
+  .combo-list { max-height: 50vh; }
+}
