@@ -255,14 +255,19 @@ function close(){ list.classList.remove('open'); active = -1; }
 }
 
 // Keep the list aligned when the visual viewport changes (iOS keyboard)
+// Keep the list aligned when the keyboard slides / viewport changes
 const vv = window.visualViewport;
 const realign = () => { if (list.classList.contains('open')) positionListForViewport(input, list); };
 if (vv) {
   vv.addEventListener('resize', realign);
   vv.addEventListener('scroll', realign);
 }
-window.addEventListener('scroll', realign, { passive: true });
 window.addEventListener('resize', realign);
+
+// Prevent window scroll handlers from closing the list while user scrolls inside it
+list.addEventListener('touchstart', (e)=>e.stopPropagation(), {passive:true});
+list.addEventListener('touchmove',  (e)=>e.stopPropagation(), {passive:true});
+list.addEventListener('wheel',      (e)=>e.stopPropagation(), {passive:true});
 
 
 /* ---------------------------
@@ -362,7 +367,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if ($('#toInput'))   $('#toInput').value   = '';
   if ($('#amount'))    $('#amount').value    = '';
 // Close dropdowns on page scroll (mobile-friendly)
-window.addEventListener('scroll', closeAllLists, { passive: true });
+
 
   const amountEl = $('#amount');
   if (amountEl) amountEl.placeholder = 'Amount (e.g. 1234)';
@@ -381,4 +386,5 @@ window.addEventListener('scroll', closeAllLists, { passive: true });
     $(sel)?.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') doConvert(); });
   });
 });
+
 
