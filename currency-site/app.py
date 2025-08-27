@@ -1,7 +1,12 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template,send_from_directory, request, jsonify
 import requests
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    static_folder="static",
+    static_url_path="/static",
+    template_folder="templates",
+)
 
 ATTRIB_TEXT = "Exchange rates provided by ExchangeRate-API (https://www.exchangerate-api.com)"
 FALLBACK_RATES = {
@@ -76,7 +81,21 @@ def api_convert():
         "formatted_from": f"{format_amount(amt, from_cur)} {from_cur}",
         "formatted_result": f"{format_amount(converted, to_cur)} {to_cur}"
     })
+@app.route("/debug/static")
+def debug_static():
+    import os, pathlib, textwrap
+    out = []
+    for path in ["static/app.js", "static/styles.css"]:
+        p = pathlib.Path(path)
+        if p.exists():
+            size = p.stat().st_size
+            head = p.read_bytes()[:100]
+            out.append(f"{path}: {size} bytes\n{head!r}\n")
+        else:
+            out.append(f"{path}: MISSING\n")
+    return "<pre>" + textwrap.dedent("\n".join(out)) + "</pre>"
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
