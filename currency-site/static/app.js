@@ -111,6 +111,18 @@ function positionListForViewport(input, list) {
     list.classList.remove('ios-fixed');
   }
 }
+async function fetchJSONWithTimeout(url, { timeout = 6000, ...opts } = {}) {
+  const ctrl = new AbortController();
+  const id = setTimeout(() => ctrl.abort(), timeout);
+  try {
+    const res = await fetch(url, { ...opts, signal: ctrl.signal });
+    // If server returns HTML/404, this will throw and we’ll go to fallback.
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } finally {
+    clearTimeout(id);
+  }
+}
 
 
 
@@ -132,26 +144,32 @@ function buildAllCodes() {
 async function loadCodesAndAttribution() {
   const sourceEl = $('#source') || $('#attrib');
   const creditEl = $('#credit');
-  let info = { live: false, count: 0 };
+  let info = { live: false, count: 0, fallback: false };
 
   try {
-    const r = await fetch('/api/rates');
-    const data = await r.json();
+    const { ok, data } = await fetchJSONWithTimeout('/api/rates', { timeout: 6000 });
+    if (!ok) throw new Error('bad status');
     RATES = data.rates || {};
-    CODES = buildAllCodes();
+    CODES = buildAllCodes();       // union list so dropdown always full
     info.live = !!data.live;
     info.count = CODES.length;
-    if (sourceEl) sourceEl.textContent = (data.attribution || 'Rates') + (data.live ? ' · Live' : ' · Fallback');
+    info.fallback = !data.live;
+    if (sourceEl) sourceEl.textContent =
+      (data.attribution || 'Rates') + (data.live ? ' · Live' : ' · Fallback');
   } catch (e) {
+    // TIMEOUT / 5xx / JSON error → keep app usable with local list
     RATES = {};
     CODES = buildAllCodes();
     info.live = false;
     info.count = CODES.length;
-    if (sourceEl) sourceEl.textContent = 'Rates unavailable right now';
+    info.fallback = true;
+    if (sourceEl) sourceEl.textContent = 'Rates timeout/unavailable · Fallback';
   }
+
   if (creditEl) creditEl.textContent = '© Ziyad — All rights reserved';
   return info;
 }
+
 
 
 /* ---------------------------
@@ -316,27 +334,23 @@ async function doRefresh() {
   const btn = $('#refresh');
   const lastEl = $('#last');
 
-  // spinner on button
   btn?.classList.add('loading');
   btn?.setAttribute('aria-busy', 'true');
 
-  // reload codes/rates
-  await loadCodesAndAttribution();
+  const info = await loadCodesAndAttribution();
 
-  // stop spinner
   btn?.classList.remove('loading');
   btn?.removeAttribute('aria-busy');
 
-  // show refresh timestamp under the result & pulse it
   if (lastEl) {
-    lastEl.textContent = ` Last Refreshed At ${new Date().toLocaleTimeString()}`;
-    pulse(lastEl); // 👈 pulse under the result
+    lastEl.textContent = `Refreshed ${new Date().toLocaleTimeString()}${info.fallback ? ' · Fallback' : ''}`;
+    pulse(lastEl);
   }
 
-  // if user is typing, refresh the open list contents
   if (document.activeElement === $('#fromInput')) $('#fromInput').dispatchEvent(new Event('input'));
   if (document.activeElement === $('#toInput'))   $('#toInput').dispatchEvent(new Event('input'));
 }
+
 
 
 /* ---------------------------
@@ -386,5 +400,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     $(sel)?.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') doConvert(); });
   });
 });
+
 
 
