@@ -16,8 +16,8 @@
     } catch (e) {}
   })();
   </script>
-  <!-- Versioned static include via Flask route -->
-  <link rel="stylesheet" href="{{ url_for('serve_static', filename='styles.css') }}?v={{ STATIC_VER }}">
+  <!-- Versioned assets via /assets route -->
+  <link rel="stylesheet" href="{{ url_for('assets', filename='styles.css') }}?v={{ STATIC_VER }}">
 </head>
 <body>
   <main class="container">
@@ -71,8 +71,8 @@
     </footer>
   </main>
 
-  <!-- Versioned static include via Flask route -->
-  <script src="{{ url_for('serve_static', filename='app.js') }}?v={{ STATIC_VER }}" defer></script>
+  <!-- Versioned app JS via /assets route -->
+  <script src="{{ url_for('assets', filename='app.js') }}?v={{ STATIC_VER }}" defer></script>
 </body>
 </html>
 
