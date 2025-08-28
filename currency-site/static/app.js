@@ -113,6 +113,31 @@ function positionListForViewport(input, list) {
   }
 }
 
+// Allow smooth, reliable scrolling inside a fixed list on iOS
+function enableIOSInnerScroll(el){
+  if (el._iosScrollEnabled) return; // init once
+  el._iosScrollEnabled = true;
+
+  // Ensure it's a scroll container with momentum
+  el.style.overflowY = 'auto';
+  el.style.webkitOverflowScrolling = 'touch';
+
+  // Classic "1px nudge" to avoid hitting scroll edges (which passes scroll to page)
+  el.addEventListener('touchstart', () => {
+    if (el.scrollTop <= 0) el.scrollTop = 1;
+    const max = el.scrollHeight - el.clientHeight;
+    if (el.scrollTop >= max) el.scrollTop = max - 1;
+  }, { passive: true });
+
+  // If content doesn't overflow, prevent the page from scrolling instead
+  el.addEventListener('touchmove', (e) => {
+    if (el.scrollHeight <= el.clientHeight) {
+      e.preventDefault(); // keep gesture here
+    }
+  }, { passive: false });
+}
+
+
 async function fetchJSONWithTimeout(url, { timeout = 6000, ...opts } = {}) {
   const ctrl = new AbortController();
   const id = setTimeout(() => ctrl.abort(), timeout);
@@ -197,9 +222,11 @@ function wireCombo({ input, list, flag }) {
   }
 
   function open()  {
-    positionListForViewport(input, list); // align above keyboard on iOS
-    list.classList.add('open');
-  }
+  positionListForViewport(input, list);     // align above keyboard on iOS
+  enableIOSInnerScroll(list);               // ← make the list scrollable on iOS
+  list.classList.add('open');
+}
+
   function close() {
     list.classList.remove('open');
     active = -1;
@@ -395,3 +422,4 @@ window.addEventListener('DOMContentLoaded', async () => {
     $(sel)?.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') doConvert(); });
   });
 });
+
