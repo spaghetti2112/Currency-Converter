@@ -90,17 +90,22 @@ const isIOS = (() => {
 function positionListForViewport(input, list) {
   const rect = input.getBoundingClientRect();
   const vv = window.visualViewport;
+  const safeBottom = parseInt(getComputedStyle(document.documentElement)
+                      .getPropertyValue('--safe-bottom') || '0', 10) || 0;
+
   if (isIOS && vv) {
-    // rect is in visual-viewport coords; fixed is layout-viewport → add offsets
+    // rect.* is visual-viewport; fixed is layout-viewport → add vv offsets
     const left = Math.round(rect.left + (vv.offsetLeft || 0));
     const top  = Math.round(rect.bottom + (vv.offsetTop || 0) + 6);
+
     list.style.position = 'fixed';
     list.style.left = left + 'px';
     list.style.top  = top  + 'px';
     list.style.minWidth = rect.width + 'px';
-    // keep the dropdown fully visible above the keyboard
-    const available = Math.max(160, Math.round(vv.height - (rect.bottom + 6) - 8));
-    list.style.maxHeight = available + 'px';
+
+    // height available below the input within the visible viewport (minus safe area)
+    const avail = Math.round(vv.height - (rect.bottom + 6) - 8 - safeBottom);
+    list.style.maxHeight = Math.max(160, avail) + 'px';
     list.classList.add('ios-fixed');
   } else {
     // revert to normal (CSS handles absolute positioning)
@@ -113,29 +118,41 @@ function positionListForViewport(input, list) {
   }
 }
 
-// Allow smooth, reliable scrolling inside a fixed list on iOS
+
+// Make a fixed dropdown list reliably scroll on iOS (iOS 17/18)
 function enableIOSInnerScroll(el){
-  if (el._iosScrollEnabled) return; // init once
+  if (el._iosScrollEnabled) return;
   el._iosScrollEnabled = true;
 
-  // Ensure it's a scroll container with momentum
   el.style.overflowY = 'auto';
-  el.style.webkitOverflowScrolling = 'touch';
+  el.style.webkitOverflowScrolling = 'touch';  // momentum scroll
 
-  // Classic "1px nudge" to avoid hitting scroll edges (which passes scroll to page)
-  el.addEventListener('touchstart', () => {
+  let startY = 0;
+
+  el.addEventListener('touchstart', (e) => {
+    if (e.touches && e.touches.length) startY = e.touches[0].clientY;
+
+    // 1px nudge so we’re never exactly on an edge (prevents scroll handoff)
     if (el.scrollTop <= 0) el.scrollTop = 1;
     const max = el.scrollHeight - el.clientHeight;
     if (el.scrollTop >= max) el.scrollTop = max - 1;
   }, { passive: true });
 
-  // If content doesn't overflow, prevent the page from scrolling instead
   el.addEventListener('touchmove', (e) => {
-    if (el.scrollHeight <= el.clientHeight) {
-      e.preventDefault(); // keep gesture here
+    if (!e.touches || !e.touches.length) return;
+    const y = e.touches[0].clientY;
+    const deltaY = y - startY;
+
+    const atTop = el.scrollTop <= 0;
+    const atBottom = Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight;
+
+    // If user tries to overscroll beyond the list’s bounds, keep the gesture here
+    if ((atTop && deltaY > 0) || (atBottom && deltaY < 0)) {
+      e.preventDefault(); // requires passive:false
     }
   }, { passive: false });
 }
+
 
 
 async function fetchJSONWithTimeout(url, { timeout = 6000, ...opts } = {}) {
