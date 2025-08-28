@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, abort, make_response
+from flask import Flask, render_template, request, jsonify, abort, make_response, redirect, url_for
 import os
 import mimetypes
 import requests
@@ -6,22 +6,21 @@ import requests
 # -------------------------------------------------------------------
 # App setup
 # -------------------------------------------------------------------
-# Disable Flask's built-in static handler; we’ll serve static ourselves.
+# Disable Flask's built-in static handler; we’ll serve files ourselves.
 app = Flask(__name__, static_folder=None, template_folder="templates")
-app.config["USE_X_SENDFILE"] = False  # avoid proxy sendfile quirks that can yield 200/0
+app.config["USE_X_SENDFILE"] = False  # avoid sendfile quirks
 
 # Absolute path to ./static
 STATIC_ROOT = os.path.join(os.path.dirname(__file__), "static")
 
-# Version token for cache-busting in templates (bump on each deploy)
+# Version token for cache-busting in templates (bump on each deploy or set env STATIC_VER)
 @app.context_processor
 def inject_static_ver():
-    return {"STATIC_VER": os.getenv("STATIC_VER", "2025-08-28-2")}
+    return {"STATIC_VER": os.getenv("STATIC_VER", "2025-08-28-3")}
 
-# Robust static route: sends literal bytes with explicit Content-Length
-@app.route("/static/<path:filename>")
-def serve_static(filename):
-    # Resolve and prevent directory traversal
+# NEW: Serve assets from /assets/... (bypasses any stale /static cache)
+@app.route("/assets/<path:filename>")
+def assets(filename):
     candidate = os.path.normpath(os.path.join(STATIC_ROOT, filename))
     root_real = os.path.realpath(STATIC_ROOT)
     path_real = os.path.realpath(candidate)
@@ -35,11 +34,16 @@ def serve_static(filename):
     resp = make_response(data)
     resp.headers["Content-Type"] = mime
     resp.headers["Content-Length"] = str(len(data))
-    # Temporary: force no-cache to bypass any stale proxy cache
+    # Temporarily disable caching to defeat any stale edge cache
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     resp.headers["Pragma"] = "no-cache"
     resp.headers["Expires"] = "0"
     return resp
+
+# Optional: legacy /static redirect → /assets with version (helps old HTML)
+@app.route("/static/<path:filename>")
+def legacy_static(filename):
+    return redirect(url_for("assets", filename=filename, v=os.getenv("STATIC_VER", "2025-08-28-3")), code=302)
 
 # -------------------------------------------------------------------
 # App constants / helpers
@@ -71,9 +75,7 @@ def format_amount(amount, currency):
 # -------------------------------------------------------------------
 @app.route("/")
 def index():
-    # In templates/index.html, reference static like:
-    # <link rel="stylesheet" href="{{ url_for('serve_static', filename='styles.css') }}?v={{ STATIC_VER }}">
-    # <script defer src="{{ url_for('serve_static', filename='app.js') }}?v={{ STATIC_VER }}"></script>
+    # In templates/index.html, assets are loaded via url_for('assets', ...)
     return render_template("index.html")
 
 @app.route("/api/rates", methods=["GET"])
@@ -97,7 +99,6 @@ def api_convert():
         return jsonify({"error": "Missing amount/from/to"}), 400
 
     try:
-        # sanitize/parse amount (keep digits, dot, minus)
         s = str(amount).strip().replace(",", "")
         cleaned = "".join(ch for ch in s if ch.isdigit() or ch in ".-")
         amt = float(cleaned)
@@ -124,7 +125,7 @@ def api_convert():
         "formatted_result": f"{format_amount(converted, to_cur)} {to_cur}"
     })
 
-# Simple debug endpoint to verify static files exist/sizes in deploy
+# Debug endpoint to verify file presence/sizes in deploy
 @app.route("/debug/static")
 def debug_static():
     import pathlib, textwrap
@@ -140,7 +141,9 @@ def debug_static():
     return "<pre>" + textwrap.dedent("\n".join(out)) + "</pre>"
 
 # -------------------------------------------------------------------
-# Local dev entrypoint (Render uses gunicorn app:app)
+# Local dev entrypoint (Render uses: gunicorn app:app)
 # -------------------------------------------------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "5000")), debug=True)
+
+
