@@ -1,14 +1,13 @@
 from flask import Flask, render_template, request, jsonify
 from flask import send_from_directory 
+import os, mimetypes
+from flask import abort, make_response
 import requests
 
-app = Flask(
-    __name__,
-    static_folder="static",
-    static_url_path="/static",
-    template_folder="templates",
-)
-app.config['USE_X_SENDFILE'] = False
+app = Flask(__name__, static_folder=None, template_folder="templates")
+STATIC_ROOT = os.path.join(os.path.dirname(__file__), "static")
+
+app.config["USE_X_SENDFILE"] = False
 
 ATTRIB_TEXT = "Exchange rates provided by ExchangeRate-API (https://www.exchangerate-api.com)"
 FALLBACK_RATES = {
@@ -97,13 +96,25 @@ def debug_static():
             out.append(f"{path}: MISSING\n")
     return "<pre>" + textwrap.dedent("\n".join(out)) + "</pre>"
 
-@app.route('/static/<path:filename>')
-def static_files(filename):
-    # conditional=True adds ETag/If-None-Match support, proper Content-Length
-    return send_from_directory(app.static_folder, filename, conditional=True)
+@app.route("/static/<path:filename>")
+def serve_static(filename):
+    path = os.path.normpath(os.path.join(STATIC_ROOT, filename))
+    # prevent directory traversal
+    if not path.startswith(STATIC_ROOT) or not os.path.isfile(path):
+        return abort(404)
 
+    mime = mimetypes.guess_type(path)[0] or "application/octet-stream"
+    with open(path, "rb") as f:
+        data = f.read()
+
+    resp = make_response(data)
+    resp.headers["Content-Type"] = mime
+    resp.headers["Content-Length"] = str(len(data))  # <- forces non-zero body
+    resp.headers["Cache-Control"] = "public, max-age=3600"
+    return resp
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
