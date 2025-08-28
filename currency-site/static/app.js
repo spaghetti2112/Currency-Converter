@@ -91,14 +91,15 @@ function positionListForViewport(input, list) {
   const rect = input.getBoundingClientRect();
   const vv = window.visualViewport;
   if (isIOS && vv) {
-    const left = Math.round(rect.left);
-    const top  = Math.round(rect.bottom + 6);
+    // rect is in visual-viewport coords; fixed is layout-viewport → add offsets
+    const left = Math.round(rect.left + (vv.offsetLeft || 0));
+    const top  = Math.round(rect.bottom + (vv.offsetTop || 0) + 6);
     list.style.position = 'fixed';
     list.style.left = left + 'px';
     list.style.top  = top  + 'px';
     list.style.minWidth = rect.width + 'px';
     // keep the dropdown fully visible above the keyboard
-    const available = Math.max(160, Math.round(vv.height - top - 8));
+    const available = Math.max(160, Math.round(vv.height - (rect.bottom + 6) - 8));
     list.style.maxHeight = available + 'px';
     list.classList.add('ios-fixed');
   } else {
@@ -111,20 +112,18 @@ function positionListForViewport(input, list) {
     list.classList.remove('ios-fixed');
   }
 }
+
 async function fetchJSONWithTimeout(url, { timeout = 6000, ...opts } = {}) {
   const ctrl = new AbortController();
   const id = setTimeout(() => ctrl.abort(), timeout);
   try {
     const res = await fetch(url, { ...opts, signal: ctrl.signal });
-    // If server returns HTML/404, this will throw and we’ll go to fallback.
     const data = await res.json();
     return { ok: res.ok, data };
   } finally {
     clearTimeout(id);
   }
 }
-
-
 
 /* ---------------------------
    Build full code list (ALL)
@@ -170,8 +169,6 @@ async function loadCodesAndAttribution() {
   return info;
 }
 
-
-
 /* ---------------------------
    Combobox wiring (your exact IDs)
 --------------------------- */
@@ -183,7 +180,7 @@ function wireCombo({ input, list, flag }) {
   input.value = '';
   updateFlag();
 
-  // Inject a tiny in-input "show all" button (▾) — no HTML changes required
+  // Inject a tiny in-input "show all" button (▾)
   const toggleBtn = document.createElement('button');
   toggleBtn.type = 'button';
   toggleBtn.className = 'combo-toggle';
@@ -199,12 +196,14 @@ function wireCombo({ input, list, flag }) {
     flag.textContent = curToFlag(code);
   }
 
-  function open()  { 
-  positionListForViewport(input, list); // <-- add this
-  list.classList.add('open'); 
-}
-function close(){ list.classList.remove('open'); active = -1; }
-
+  function open()  {
+    positionListForViewport(input, list); // align above keyboard on iOS
+    list.classList.add('open');
+  }
+  function close() {
+    list.classList.remove('open');
+    active = -1;
+  }
 
   function highlight(index) {
     const options = [...list.querySelectorAll('.combo-item')];
@@ -242,7 +241,7 @@ function close(){ list.classList.remove('open'); active = -1; }
     render(items, q ? 'filter' : 'all');
   }
 
-  // NEW: always-open-full-list button
+  // "Show all" button
   toggleBtn.addEventListener('pointerdown', (e) => {
     e.preventDefault(); // avoid blurring input
     if (list.classList.contains('open') && list.dataset.mode === 'all') {
@@ -270,23 +269,23 @@ function close(){ list.classList.remove('open'); active = -1; }
   document.addEventListener('pointerdown', (e) => {
     if (e.target !== input && e.target !== toggleBtn && !list.contains(e.target)) close();
   });
+
+  // --- iOS/Viewport: keep the list aligned while keyboard/viewport moves
+  const vv = window.visualViewport;
+  const realign = () => {
+    if (list.classList.contains('open')) positionListForViewport(input, list);
+  };
+  if (vv) {
+    vv.addEventListener('resize', realign);
+    vv.addEventListener('scroll', realign);
+  }
+  window.addEventListener('resize', realign);
+
+  // Allow scrolling inside the list on touch without closing it
+  list.addEventListener('touchstart', (e)=>e.stopPropagation(), { passive: true });
+  list.addEventListener('touchmove',  (e)=>e.stopPropagation(), { passive: true });
+  list.addEventListener('wheel',      (e)=>e.stopPropagation(), { passive: true });
 }
-
-// Keep the list aligned when the visual viewport changes (iOS keyboard)
-// Keep the list aligned when the keyboard slides / viewport changes
-const vv = window.visualViewport;
-const realign = () => { if (list.classList.contains('open')) positionListForViewport(input, list); };
-if (vv) {
-  vv.addEventListener('resize', realign);
-  vv.addEventListener('scroll', realign);
-}
-window.addEventListener('resize', realign);
-
-// Prevent window scroll handlers from closing the list while user scrolls inside it
-list.addEventListener('touchstart', (e)=>e.stopPropagation(), {passive:true});
-list.addEventListener('touchmove',  (e)=>e.stopPropagation(), {passive:true});
-list.addEventListener('wheel',      (e)=>e.stopPropagation(), {passive:true});
-
 
 /* ---------------------------
    Convert / Swap / Refresh
@@ -314,14 +313,13 @@ async function doConvert() {
 
     if (lastEl) {
       lastEl.textContent = `Refreshed ${new Date().toLocaleTimeString()}`;
-      pulse(lastEl); // 👈 pulse under the result
+      pulse(lastEl); // pulse under the result
     }
   } catch (err) {
     resultEl.textContent = err.message;
     if (lastEl) lastEl.textContent = '';
   }
 }
-
 
 function doSwap() {
   const a = $('#fromInput'), b = $('#toInput');
@@ -330,6 +328,7 @@ function doSwap() {
   $('#fromFlag').textContent = curToFlag(a.value.toUpperCase().trim());
   $('#toFlag').textContent   = curToFlag(b.value.toUpperCase().trim());
 }
+
 async function doRefresh() {
   const btn = $('#refresh');
   const lastEl = $('#last');
@@ -350,8 +349,6 @@ async function doRefresh() {
   if (document.activeElement === $('#fromInput')) $('#fromInput').dispatchEvent(new Event('input'));
   if (document.activeElement === $('#toInput'))   $('#toInput').dispatchEvent(new Event('input'));
 }
-
-
 
 /* ---------------------------
    Theme toggle (unchanged)
@@ -380,8 +377,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   if ($('#fromInput')) $('#fromInput').value = '';
   if ($('#toInput'))   $('#toInput').value   = '';
   if ($('#amount'))    $('#amount').value    = '';
-// Close dropdowns on page scroll (mobile-friendly)
-
 
   const amountEl = $('#amount');
   if (amountEl) amountEl.placeholder = 'Amount (e.g. 1234)';
@@ -400,6 +395,3 @@ window.addEventListener('DOMContentLoaded', async () => {
     $(sel)?.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') doConvert(); });
   });
 });
-
-
-
