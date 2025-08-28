@@ -222,15 +222,20 @@ html, body {
 @media (hover: none) and (pointer: coarse) {
   .combo-list { max-height: 50vh; } /* half-screen tall, scrollable */
 }
-/* iOS-friendly scrolling & fixed-mode dropdown */
+/* Safe-area var for iOS 15–18 */
+:root { --safe-bottom: env(safe-area-inset-bottom, 0px); }
+
 /* iOS/touch scroll robustness */
 .combo-list{
-  overflow-y: auto;                /* must be scrollable */
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;    /* prevent handing scroll to page (non-iOS) */
+  overscroll-behavior: contain;     /* non-iOS browsers */
+  touch-action: pan-y;               /* allow vertical swipes inside list */
+  padding-bottom: calc(var(--safe-bottom) + 4px);
 }
 
-.combo-list.ios-fixed { position: fixed; } /* toggled by JS on iOS */
+/* When JS switches to fixed mode on iOS */
+.combo-list.ios-fixed { position: fixed; }
 
 /* Ensure the page itself can still scroll on mobile */
 html, body {
@@ -244,4 +249,6 @@ html, body {
 @media (hover: none) and (pointer: coarse) {
   .combo-list { max-height: 50vh; }
 }
+
+
 
